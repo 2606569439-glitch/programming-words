@@ -114,6 +114,15 @@
             opacity: 0.7;
             margin-top: 10px;
         }
+        .resume-notice {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: white;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -121,6 +130,10 @@
         <div class="header">
             <h1>🐎 编程单词卡</h1>
             <div class="progress" id="progress">1 / 240</div>
+        </div>
+        
+        <div class="resume-notice" id="resumeNotice" style="display: none;">
+            💡 已从上次的位置继续（第 <span id="resumeNum"></span> 个单词）
         </div>
         
         <div class="card">
@@ -138,6 +151,7 @@
         </div>
         <div class="controls">
             <button class="btn btn-secondary" onclick="shuffleCards()">🔀 打乱顺序</button>
+            <button class="btn btn-secondary" onclick="resetProgress()">🔄 从头开始</button>
         </div>
         <div class="shuffle-info" id="shuffleInfo">按顺序学习</div>
         <div class="audio-hint">💡 点喇叭听发音（需要联网）</div>
@@ -343,8 +357,45 @@
             {word: "condition", meaning: "条件；状况", example: "if condition", category: "五、看文档常用"}
         ];
 
+        const STORAGE_KEY = 'programmingWordsProgress';
         let currentIndex = 0;
         let shuffled = false;
+
+        // 读取上次的进度
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved !== null) {
+                const savedIndex = parseInt(saved, 10);
+                if (savedIndex >= 0 && savedIndex < words.length) {
+                    currentIndex = savedIndex;
+                    // 显示提示
+                    const notice = document.getElementById('resumeNotice');
+                    document.getElementById('resumeNum').textContent = currentIndex + 1;
+                    notice.style.display = 'block';
+                    // 3 秒后自动隐藏提示
+                    setTimeout(() => {
+                        notice.style.display = 'none';
+                    }, 3000);
+                }
+            }
+        }
+
+        // 保存当前进度
+        function saveProgress() {
+            localStorage.setItem(STORAGE_KEY, currentIndex.toString());
+        }
+
+        // 重置进度
+        function resetProgress() {
+            if (confirm('确定要从头开始吗？当前进度将被清除。')) {
+                localStorage.removeItem(STORAGE_KEY);
+                currentIndex = 0;
+                shuffled = false;
+                document.getElementById('shuffleInfo').textContent = '按顺序学习';
+                updateCard();
+                document.getElementById('resumeNotice').style.display = 'none';
+            }
+        }
 
         function updateCard() {
             const word = words[currentIndex];
@@ -353,6 +404,7 @@
             document.getElementById('example').textContent = word.example;
             document.getElementById('category').textContent = word.category;
             document.getElementById('progress').textContent = `${currentIndex + 1} / ${words.length}`;
+            saveProgress(); // 每次更新都保存进度
         }
 
         function nextCard() {
@@ -360,7 +412,7 @@
                 currentIndex++;
                 updateCard();
             } else {
-                alert('🎉 恭喜！你已经学完所有单词！\n\n点"打乱顺序"再来一轮，或者从头开始复习！');
+                alert('🎉 恭喜！你已经学完所有单词！\n\n点"打乱顺序"再来一轮，或者点"从头开始"重新学习！');
                 currentIndex = 0;
                 updateCard();
             }
@@ -415,6 +467,8 @@
             }
         }
 
+        // 页面加载时读取进度
+        loadProgress();
         updateCard();
     </script>
 </body>
