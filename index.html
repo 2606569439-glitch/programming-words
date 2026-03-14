@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编程单词卡 - 240 词</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 10px; }
+        .progress { font-size: 14px; opacity: 0.9; }
+        .card-container {
+            perspective: 1000px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .card.flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .card-front {
+            background: white;
+        }
+        .card-back {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            transform: rotateY(180deg);
+        }
+        .word {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .phonetic {
+            font-size: 16px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .speaker {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .speaker:active { transform: scale(0.95); }
+        .meaning {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .example {
+            font-size: 14px;
+            color: #666;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            max-width: 100%;
+        }
+        .category {
+            font-size: 12px;
+            color: #888;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+        .btn:active { transform: scale(0.95); }
+        .shuffle-info {
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐎 编程单词卡</h1>
+            <div class="progress" id="progress">1 / 240</div>
+        </div>
+        
+        <div class="card-container">
+            <div class="card" id="card" onclick="flipCard()">
+                <div class="card-face card-front">
+                    <div class="word" id="word">if</div>
+                    <div class="phonetic" id="phonetic">/ɪf/</div>
+                    <div class="speaker" onclick="event.stopPropagation(); speak()">🔊</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="meaning" id="meaning">如果；是否</div>
+                    <div class="example" id="example">if (x > 0) { ... }</div>
+                    <div class="category" id="category">一、编程语言关键字</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="prevCard()">← 上一个</button>
+            <button class="btn btn-primary" onclick="nextCard()">下一个 →</button>
+        </div>
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="shuffleCards()">🔀 打乱顺序</button>
+        </div>
+        <div class="shuffle-info" id="shuffleInfo">按顺序学习</div>
+    </div>
+
+    <script>
+        const words = [
+            {word: "if", meaning: "如果；是否", example: "if (x > 0) { ... }", category: "一、编程语言关键字"},
+            {word: "else", meaning: "否则；不然", example: "if (x > 0) { ... } else { ... }", category: "一、编程语言关键字"},
+            {word: "for", meaning: "对于；为了", example: "for (int i = 0; i < 10; i++) { ... }", category: "一、编程语言关键字"},
+            {word: "while", meaning: "当...时；虽然", example: "while (x < 10) { x++; }", category: "一、编程语言关键字"},
+            {word: "do", meaning: "做；执行", example: "do { ... } while (x < 10);", category: "一、编程语言关键字"},
+            {word: "break", meaning: "中断；打破", example: "break; // 跳出循环", category: "一、编程语言关键字"},
+            {word: "continue", meaning: "继续；持续", example: "continue; // 跳过本次", category: "一、编程语言关键字"},
+            {word: "return", meaning: "返回；归还", example: "return x + 1;", category: "一、编程语言关键字"},
+            {word: "def", meaning: "定义（Python）", example: "def hello():", category: "一、编程语言关键字"},
+            {word: "function", meaning: "函数；功能；作用", example: "function add(a, b) { return a + b; }", category: "一、编程语言关键字"},
+            {word: "class", meaning: "类；班级；等级", example: "class Person { constructor(name) { ... } }", category: "一、编程语言关键字"},
+            {word: "import", meaning: "导入；进口", example: "import os", category: "一、编程语言关键字"},
+            {word: "from", meaning: "从...；来自", example: "from math import sqrt", category: "一、编程语言关键字"},
+            {word: "export", meaning: "导出；出口", example: "export default App;", category: "一、编程语言关键字"},
+            {word: "var", meaning: "变量", example: "var x = 10;", category: "一、编程语言关键字"},
+            {word: "let", meaning: "让；允许", example: "let x = 10; // ES6", category: "一、编程语言关键字"},
+            {word: "const", meaning: "常量", example: "const PI = 3.14159;", category: "一、编程语言关键字"},
+            {word: "public", meaning: "公共的；公开的", example: "public class Main { ... }", category: "一、编程语言关键字"},
+            {word: "private", meaning: "私有的；私人的", example: "private int age;", category: "一、编程语言关键字"},
+            {word: "static", meaning: "静态的；静止的", example: "static int count = 0;", category: "一、编程语言关键字"},
+            {word: "void", meaning: "空；无效的", example: "void main() { ... }", category: "一、编程语言关键字"},
+            {word: "int", meaning: "整数", example: "int age = 25;", category: "一、编程语言关键字"},
+            {word: "float", meaning: "浮点数；漂浮", example: "float price = 19.99;", category: "一、编程语言关键字"},
+            {word: "double", meaning: "双精度；两倍", example: "double pi = 3.1415926535;", category: "一、编程语言关键字"},
+            {word: "string", meaning: "字符串；线", example: "string name = \"John\";", category: "一、编程语言关键字"},
+            {word: "bool", meaning: "布尔值", example: "bool isValid = true;", category: "一、编程语言关键字"},
+            {word: "true", meaning: "真；真实的", example: "bool flag = true;", category: "一、编程语言关键字"},
+            {word: "false", meaning: "假；错误的", example: "bool flag = false;", category: "一、编程语言关键字"},
+            {word: "null", meaning: "空值；无效", example: "let x = null;", category: "一、编程语言关键字"},
+            {word: "none", meaning: "无；没有一个", example: "return None # Python", category: "一、编程语言关键字"},
+            {word: "try", meaning: "尝试；努力", example: "try { ... } catch (e) { ... }", category: "一、编程语言关键字"},
+            {word: "catch", meaning: "捕获；抓住", example: "catch (Exception e) { ... }", category: "一、编程语言关键字"},
+            {word: "throw", meaning: "抛出；扔", example: "throw new Error(\"错误\");", category: "一、编程语言关键字"},
+            {word: "finally", meaning: "最终；最后", example: "finally { ... }", category: "一、编程语言关键字"},
+            {word: "new", meaning: "新建；新的", example: "let obj = new Object();", category: "一、编程语言关键字"},
+            {word: "get", meaning: "获取；得到", example: "let value = obj.get(\"key\");", category: "二、操作动作"},
+            {word: "set", meaning: "设置；集合", example: "obj.set(\"key\", value);", category: "二、操作动作"},
+            {word: "add", meaning: "添加；增加", example: "list.add(item);", category: "二、操作动作"},
+            {word: "remove", meaning: "移除；去掉", example: "list.remove(item);", category: "二、操作动作"},
+            {word: "delete", meaning: "删除；消灭", example: "delete obj.key;", category: "二、操作动作"},
+            {word: "update", meaning: "更新；升级", example: "db.update(record);", category: "二、操作动作"},
+            {word: "create", meaning: "创建；创造", example: "create table users;", category: "二、操作动作"},
+            {word: "find", meaning: "查找；找到", example: "list.find(x => x.id === 1);", category: "二、操作动作"},
+            {word: "search", meaning: "搜索；搜寻", example: "search(query);", category: "二、操作动作"},
+            {word: "sort", meaning: "排序；种类", example: "list.sort();", category: "二、操作动作"},
+            {word: "filter", meaning: "过滤；滤波器", example: "list.filter(x => x > 0);", category: "二、操作动作"},
+            {word: "map", meaning: "映射；地图", example: "list.map(x => x * 2);", category: "二、操作动作"},
+            {word: "reduce", meaning: "归约；减少", example: "list.reduce((sum, x) => sum + x, 0);", category: "二、操作动作"},
+            {word: "run", meaning: "运行；跑步", example: "run(script);", category: "二、操作动作"},
+            {word: "start", meaning: "开始；启动", example: "startServer();", category: "二、操作动作"},
+            {word: "stop", meaning: "停止；阻止", example: "stop();", category: "二、操作动作"},
+            {word: "open", meaning: "打开；开放", example: "open(\"file.txt\");", category: "二、操作动作"},
+            {word: "close", meaning: "关闭；关闭", example: "close(file);", category: "二、操作动作"},
+            {word: "read", meaning: "读取；阅读", example: "read(file);", category: "二、操作动作"},
+            {word: "write", meaning: "写入；书写", example: "write(file, data);", category: "二、操作动作"},
+            {word: "load", meaning: "加载；装载", example: "load(\"config.json\");", category: "二、操作动作"},
+            {word: "save", meaning: "保存；拯救", example: "save(data);", category: "二、操作动作"},
+            {word: "send", meaning: "发送；寄", example: "send(email);", category: "二、操作动作"},
+            {word: "receive", meaning: "接收；收到", example: "receive(message);", category: "二、操作动作"},
+            {word: "connect", meaning: "连接；联系", example: "connect(database);", category: "二、操作动作"},
+            {word: "disconnect", meaning: "断开；分离", example: "disconnect();", category: "二、操作动作"},
+            {word: "show", meaning: "显示；展示", example: "show(dialog);", category: "二、操作动作"},
+            {word: "hide", meaning: "隐藏；躲藏", example: "hide(element);", category: "二、操作动作"},
+            {word: "print", meaning: "打印；印刷", example: "print(\"Hello\");", category: "二、操作动作"},
+            {word: "log", meaning: "日志；记录", example: "log.info(\"启动中...\");", category: "二、操作动作"},
+            {word: "parse", meaning: "解析；分析", example: "parse(jsonString);", category: "二、操作动作"},
+            {word: "generate", meaning: "生成；产生", example: "generateId();", category: "二、操作动作"},
+            {word: "handle", meaning: "处理；手柄", example: "handle(event);", category: "二、操作动作"},
+            {word: "data", meaning: "数据；资料", example: "let data = { name: \"John\" };", category: "二、数据/对象"},
+            {word: "value", meaning: "值；价值", example: "let value = 100;", category: "二、数据/对象"},
+            {word: "key", meaning: "键；钥匙；关键", example: "obj[\"key\"] = value;", category: "二、数据/对象"},
+            {word: "id", meaning: "标识符；身份", example: "let id = 12345;", category: "二、数据/对象"},
+            {word: "name", meaning: "名称；名字", example: "let name = \"Alice\";", category: "二、数据/对象"},
+            {word: "text", meaning: "文本；课文", example: "let text = \"Hello World\";", category: "二、数据/对象"},
+            {word: "content", meaning: "内容；目录", example: "let content = file.read();", category: "二、数据/对象"},
+            {word: "item", meaning: "项目；条款；物品", example: "list.addItem(item);", category: "二、数据/对象"},
+            {word: "list", meaning: "列表；清单", example: "let list = [1, 2, 3];", category: "二、数据/对象"},
+            {word: "array", meaning: "数组；阵列", example: "let array = new Array(10);", category: "二、数据/对象"},
+            {word: "object", meaning: "对象；物体；目标", example: "let object = { key: value };", category: "二、数据/对象"},
+            {word: "dict", meaning: "字典；词典", example: "dict = {\"a\": 1, \"b\": 2}", category: "二、数据/对象"},
+            {word: "map", meaning: "映射；地图", example: "let map = new Map();", category: "二、数据/对象"},
+            {word: "set", meaning: "集合；设置", example: "let set = new Set([1, 2, 3]);", category: "二、数据/对象"},
+            {word: "number", meaning: "数字；号码", example: "let number = 42;", category: "二、数据/对象"},
+            {word: "char", meaning: "字符；人物", example: "char c = 'A';", category: "二、数据/对象"},
+            {word: "byte", meaning: "字节；字节单位", example: "byte[] data = new byte[1024];", category: "二、数据/对象"},
+            {word: "size", meaning: "大小；尺寸", example: "let size = list.length;", category: "二、数据/对象"},
+            {word: "length", meaning: "长度；长短", example: "let length = str.length;", category: "二、数据/对象"},
+            {word: "count", meaning: "计数；总数", example: "let count = list.count();", category: "二、数据/对象"},
+            {word: "total", meaning: "总计；合计", example: "let total = sum(list);", category: "二、数据/对象"},
+            {word: "index", meaning: "索引；指数", example: "let index = list.indexOf(item);", category: "二、数据/对象"},
+            {word: "current", meaning: "当前；电流", example: "let current = getCurrentItem();", category: "二、数据/对象"},
+            {word: "next", meaning: "下一个；其次", example: "let next = iterator.next();", category: "二、数据/对象"},
+            {word: "previous", meaning: "上一个；先前", example: "let prev = list.previous();", category: "二、数据/对象"},
+            {word: "result", meaning: "结果；成绩", example: "let result = calculate();", category: "二、数据/对象"},
+            {word: "response", meaning: "响应；回答", example: "let response = await fetch(url);", category: "二、数据/对象"},
+            {word: "request", meaning: "请求；要求", example: "let request = new Request(url);", category: "二、数据/对象"},
+            {word: "param", meaning: "参数", example: "function foo(param) { ... }", category: "二、数据/对象"},
+            {word: "argument", meaning: "实参；争论；论据", example: "foo(argument);", category: "二、数据/对象"},
+            {word: "option", meaning: "选项；选择权", example: "let option = { debug: true };", category: "二、数据/对象"},
+            {word: "config", meaning: "配置", example: "let config = loadConfig();", category: "二、数据/对象"},
+            {word: "setting", meaning: "设置；环境", example: "saveSetting(key, value);", category: "二、数据/对象"},
+            {word: "status", meaning: "状态；地位", example: "let status = response.status;", category: "二、数据/对象"},
+            {word: "state", meaning: "状态；国家；州", example: "let state = { count: 0 };", category: "二、数据/对象"},
+            {word: "type", meaning: "类型；种类", example: "let type = typeof x;", category: "二、数据/对象"},
+            {word: "file", meaning: "文件；档案", example: "let file = open(\"test.txt\");", category: "三、文件/路径/网络"},
+            {word: "path", meaning: "路径；小路", example: "let path = \"/usr/local/bin\";", category: "三、文件/路径/网络"},
+            {word: "url", meaning: "网址", example: "let url = \"https://example.com\";", category: "三、文件/路径/网络"},
+            {word: "link", meaning: "链接；连接", example: "let link = \"<a href='...'>\";", category: "三、文件/路径/网络"},
+            {word: "server", meaning: "服务器；服务员", example: "startServer(port);", category: "三、文件/路径/网络"},
+            {word: "client", meaning: "客户端；顾客", example: "let client = new Client();", category: "三、文件/路径/网络"},
+            {word: "host", meaning: "主机；主持人", example: "let host = \"localhost\";", category: "三、文件/路径/网络"},
+            {word: "port", meaning: "端口；港口", example: "let port = 8080;", category: "三、文件/路径/网络"},
+            {word: "api", meaning: "应用程序接口", example: "callAPI(\"/users\");", category: "三、文件/路径/网络"},
+            {word: "http", meaning: "超文本传输协议", example: "http://example.com", category: "三、文件/路径/网络"},
+            {word: "https", meaning: "安全超文本传输协议", example: "https://example.com", category: "三、文件/路径/网络"},
+            {word: "local", meaning: "本地；局部的", example: "let local = \"localhost\";", category: "三、文件/路径/网络"},
+            {word: "remote", meaning: "远程；遥远的", example: "connectRemote(host);", category: "三、文件/路径/网络"},
+            {word: "input", meaning: "输入；投入", example: "let input = readInput();", category: "三、文件/路径/网络"},
+            {word: "output", meaning: "输出；产量", example: "writeOutput(data);", category: "三、文件/路径/网络"},
+            {word: "stream", meaning: "流；溪流", example: "let stream = new Stream();", category: "三、文件/路径/网络"},
+            {word: "folder", meaning: "文件夹", example: "createFolder(\"docs\");", category: "三、文件/路径/网络"},
+            {word: "error", meaning: "错误；误差", example: "throw new Error(\"出错\");", category: "四、报错/日志"},
+            {word: "warn", meaning: "警告；提醒", example: "warn(\"即将过期\");", category: "四、报错/日志"},
+            {word: "warning", meaning: "警告；警报", example: "console.warn(\"警告信息\");", category: "四、报错/日志"},
+            {word: "info", meaning: "信息；情报", example: "log.info(\"启动成功\");", category: "四、报错/日志"},
+            {word: "debug", meaning: "调试；调试模式", example: "debug(\"变量值:\", x);", category: "四、报错/日志"},
+            {word: "fatal", meaning: "致命的；重大的", example: "log.fatal(\"系统崩溃\");", category: "四、报错/日志"},
+            {word: "failed", meaning: "失败；不及格", example: "if (failed) { retry(); }", category: "四、报错/日志"},
+            {word: "success", meaning: "成功；成就", example: "if (success) { celebrate(); }", category: "四、报错/日志"},
+            {word: "ok", meaning: "确定；好的", example: "status = \"OK\";", category: "四、报错/日志"},
+            {word: "invalid", meaning: "无效的；有病的", example: "if (invalid) { throw Error(); }", category: "四、报错/日志"},
+            {word: "valid", meaning: "有效的；正当的", example: "if (valid) { proceed(); }", category: "四、报错/日志"},
+            {word: "missing", meaning: "缺失的；失踪的", example: "if (missing) { createDefault(); }", category: "四、报错/日志"},
+            {word: "not found", meaning: "未找到", example: "404 Not Found", category: "四、报错/日志"},
+            {word: "exist", meaning: "存在；生存", example: "if (exist(path)) { ... }", category: "四、报错/日志"},
+            {word: "exists", meaning: "存在（第三人称）", example: "if (file.exists()) { ... }", category: "四、报错/日志"},
+            {word: "duplicate", meaning: "重复；复制", example: "if (duplicate) { skip(); }", category: "四、报错/日志"},
+            {word: "empty", meaning: "空；空的", example: "if (empty(list)) { ... }", category: "四、报错/日志"},
+            {word: "undefined", meaning: "未定义的", example: "if (x === undefined) { ... }", category: "四、报错/日志"},
+            {word: "expected", meaning: "期望的；预期的", example: "expected: \"string\", got: \"number\"", category: "四、报错/日志"},
+            {word: "unexpected", meaning: "意外的；想不到的", example: "unexpected token", category: "四、报错/日志"},
+            {word: "timeout", meaning: "超时；超时时间", example: "request.timeout(5000);", category: "四、报错/日志"},
+            {word: "expired", meaning: "过期；失效", example: "if (expired) { renew(); }", category: "四、报错/日志"},
+            {word: "denied", meaning: "拒绝；被拒绝", example: "access denied", category: "四、报错/日志"},
+            {word: "forbidden", meaning: "禁止的；被禁止的", example: "403 Forbidden", category: "四、报错/日志"},
+            {word: "access", meaning: "访问；进入", example: "access denied", category: "四、报错/日志"},
+            {word: "permission", meaning: "权限；许可", example: "permission denied", category: "四、报错/日志"},
+            {word: "syntax", meaning: "语法；句法", example: "SyntaxError: invalid syntax", category: "四、报错/日志"},
+            {word: "parse error", meaning: "解析错误", example: "ParseError: invalid JSON", category: "四、报错/日志"},
+            {word: "compile", meaning: "编译；编辑", example: "compile error", category: "四、报错/日志"},
+            {word: "runtime", meaning: "运行时；运行时间", example: "RuntimeError: division by zero", category: "四、报错/日志"},
+            {word: "exception", meaning: "异常；例外", example: "throw new Exception();", category: "四、报错/日志"},
+            {word: "crash", meaning: "崩溃；坠毁", example: "app crashed", category: "四、报错/日志"},
+            {word: "overflow", meaning: "溢出；泛滥", example: "stack overflow", category: "四、报错/日志"},
+            {word: "out of memory", meaning: "内存不足", example: "Error: Out of memory", category: "四、报错/日志"},
+            {word: "line", meaning: "行；线；线路", example: "Error at line 42", category: "四、报错/日志"},
+            {word: "column", meaning: "列；柱；专栏", example: "Error at column 10", category: "四、报错/日志"},
+            {word: "module", meaning: "模块；组件", example: "ModuleNotFoundError", category: "四、报错/日志"},
+            {word: "package", meaning: "包；包裹；套件", example: "package.json", category: "四、报错/日志"},
+            {word: "library", meaning: "库；图书馆", example: "import library", category: "四、报错/日志"},
+            {word: "depend", meaning: "依赖；取决于", example: "depends on", category: "四、报错/日志"},
+            {word: "install", meaning: "安装；设置", example: "npm install", category: "四、报错/日志"},
+            {word: "uninstall", meaning: "卸载；移除", example: "npm uninstall", category: "四、报错/日志"},
+            {word: "version", meaning: "版本；说法", example: "version 1.0.0", category: "四、报错/日志"},
+            {word: "support", meaning: "支持；支撑", example: "not supported", category: "四、报错/日志"},
+            {word: "example", meaning: "示例；例子", example: "for example", category: "五、看文档常用"},
+            {word: "sample", meaning: "样例；样本", example: "sample code", category: "五、看文档常用"},
+            {word: "usage", meaning: "用法；使用", example: "usage: python script.py", category: "五、看文档常用"},
+            {word: "use", meaning: "使用；用途", example: "use strict;", category: "五、看文档常用"},
+            {word: "note", meaning: "注释；笔记；便条", example: "Note: This is deprecated", category: "五、看文档常用"},
+            {word: "notice", meaning: "通知；公告", example: "notice: breaking change", category: "五、看文档常用"},
+            {word: "tip", meaning: "提示；小费；尖端", example: "Tip: Use Ctrl+S to save", category: "五、看文档常用"},
+            {word: "default", meaning: "默认；违约", example: "default value", category: "五、看文档常用"},
+            {word: "optional", meaning: "可选的；非强制的", example: "optional parameter", category: "五、看文档常用"},
+            {word: "required", meaning: "必填的；必需的", example: "required field", category: "五、看文档常用"},
+            {word: "fixed", meaning: "固定的；不变的", example: "fixed in version 2.0", category: "五、看文档常用"},
+            {word: "change", meaning: "改变；变化", example: "changelog", category: "五、看文档常用"},
+            {word: "modify", meaning: "修改；更改", example: "modify config", category: "五、看文档常用"},
+            {word: "enable", meaning: "启用；使能够", example: "enable feature", category: "五、看文档常用"},
+            {word: "disable", meaning: "禁用；使失去能力", example: "disable warning", category: "五、看文档常用"},
+            {word: "on", meaning: "开；在...上", example: "turn on", category: "五、看文档常用"},
+            {word: "off", meaning: "关；离开", example: "turn off", category: "五、看文档常用"},
+            {word: "mode", meaning: "模式；方式", example: "dark mode", category: "五、看文档常用"},
+            {word: "feature", meaning: "功能；特性；特征", example: "new feature", category: "五、看文档常用"},
+            {word: "compatible", meaning: "兼容的；可共存的", example: "compatible with Python 3", category: "五、看文档常用"},
+            {word: "platform", meaning: "平台；站台", example: "cross-platform", category: "五、看文档常用"},
+            {word: "system", meaning: "系统；体系", example: "operating system", category: "五、看文档常用"},
+            {word: "device", meaning: "设备；装置", example: "mobile device", category: "五、看文档常用"},
+            {word: "browser", meaning: "浏览器；浏览者", example: "web browser", category: "五、看文档常用"},
+            {word: "window", meaning: "窗口；窗户", example: "new window", category: "五、看文档常用"},
+            {word: "screen", meaning: "屏幕；银幕", example: "full screen", category: "五、看文档常用"},
+            {word: "begin", meaning: "开始；着手", example: "begin transaction", category: "五、看文档常用"},
+            {word: "end", meaning: "结束；末端", example: "end of file", category: "五、看文档常用"},
+            {word: "main", meaning: "主要的；主管", example: "main function", category: "五、看文档常用"},
+            {word: "loop", meaning: "循环；环路", example: "infinite loop", category: "五、看文档常用"},
+            {word: "condition", meaning: "条件；状况", example: "if condition", category: "五、看文档常用"}
+        ];
+
+        let currentIndex = 0;
+        let isFlipped = false;
+        let shuffled = false;
+
+        function updateCard() {
+            const word = words[currentIndex];
+            document.getElementById('word').textContent = word.word;
+            document.getElementById('meaning').textContent = word.meaning;
+            document.getElementById('example').textContent = word.example;
+            document.getElementById('category').textContent = word.category;
+            document.getElementById('progress').textContent = `${currentIndex + 1} / ${words.length}`;
+            isFlipped = false;
+            document.getElementById('card').classList.remove('flipped');
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            document.getElementById('card').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < words.length - 1) {
+                currentIndex++;
+                updateCard();
+            } else {
+                alert('🎉 恭喜！你已经学完所有单词！\n\n点"打乱顺序"再来一轮，或者从头开始复习！');
+                currentIndex = 0;
+                updateCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            }
+        }
+
+        function shuffleCards() {
+            shuffled = !shuffled;
+            if (shuffled) {
+                // Fisher-Yates shuffle
+                for (let i = words.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [words[i], words[j]] = [words[j], words[i]];
+                }
+                document.getElementById('shuffleInfo').textContent = '🔀 已打乱顺序';
+            } else {
+                location.reload(); // 重新加载恢复原顺序
+            }
+            currentIndex = 0;
+            updateCard();
+        }
+
+        function speak() {
+            const word = words[currentIndex].word;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('抱歉，你的浏览器不支持语音合成。\n\n但卡片仍然可以正常使用！');
+            }
+        }
+
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextCard();
+            if (e.key === 'ArrowLeft') prevCard();
+            if (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown') flipCard();
+        });
+
+        // 初始化
+        updateCard();
+    </script>
+</body>
+</html>
