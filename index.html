@@ -29,13 +29,13 @@
             text-align: center;
         }
         .word {
-            font-size: 42px;
+            font-size: 48px;
             font-weight: bold;
-            color: #333;
+            color: #667eea;
             margin-bottom: 10px;
         }
         .phonetic {
-            font-size: 18px;
+            font-size: 16px;
             color: #888;
             margin-bottom: 15px;
         }
@@ -53,45 +53,31 @@
             margin-bottom: 20px;
         }
         .speaker:active { transform: scale(0.95); }
-        .answer-area {
+        .meaning {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+            padding: 15px;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-        .answer-area.show { display: block; }
-        .meaning {
-            font-size: 26px;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: bold;
         }
         .example {
             font-size: 15px;
             color: #666;
-            background: white;
+            background: #f8f9fa;
             padding: 12px 15px;
             border-radius: 8px;
             margin-bottom: 10px;
+            text-align: left;
         }
         .category {
             font-size: 13px;
             color: #888;
-        }
-        .btn-show {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
             margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
         }
-        .btn-show:active { transform: scale(0.98); }
         .controls {
             display: flex;
             justify-content: center;
@@ -141,14 +127,9 @@
             <div class="word" id="word">if</div>
             <div class="phonetic" id="phonetic">/ɪf/</div>
             <div class="speaker" onclick="speak()">🔊</div>
-            
-            <button class="btn-show" id="btnShow" onclick="toggleAnswer()">显示答案</button>
-            
-            <div class="answer-area" id="answerArea">
-                <div class="meaning" id="meaning">如果；是否</div>
-                <div class="example" id="example">if (x > 0) { ... }</div>
-                <div class="category" id="category">一、编程语言关键字</div>
-            </div>
+            <div class="meaning" id="meaning">如果；是否</div>
+            <div class="example" id="example">if (x > 0) { ... }</div>
+            <div class="category" id="category">一、编程语言关键字</div>
         </div>
         
         <div class="controls">
@@ -372,20 +353,6 @@
             document.getElementById('example').textContent = word.example;
             document.getElementById('category').textContent = word.category;
             document.getElementById('progress').textContent = `${currentIndex + 1} / ${words.length}`;
-            document.getElementById('answerArea').classList.remove('show');
-            document.getElementById('btnShow').textContent = '显示答案';
-        }
-
-        function toggleAnswer() {
-            const answerArea = document.getElementById('answerArea');
-            const btnShow = document.getElementById('btnShow');
-            if (answerArea.classList.contains('show')) {
-                answerArea.classList.remove('show');
-                btnShow.textContent = '显示答案';
-            } else {
-                answerArea.classList.add('show');
-                btnShow.textContent = '隐藏答案';
-            }
         }
 
         function nextCard() {
