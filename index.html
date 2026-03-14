@@ -129,6 +129,13 @@
             font-size: 12px;
             opacity: 0.8;
         }
+        .audio-hint {
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -161,6 +168,7 @@
             <button class="btn btn-secondary" onclick="shuffleCards()">🔀 打乱顺序</button>
         </div>
         <div class="shuffle-info" id="shuffleInfo">按顺序学习</div>
+        <div class="audio-hint" id="audioHint">💡 点喇叭听发音（需要联网）</div>
     </div>
 
     <script>
@@ -404,14 +412,13 @@
         function shuffleCards() {
             shuffled = !shuffled;
             if (shuffled) {
-                // Fisher-Yates shuffle
                 for (let i = words.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [words[i], words[j]] = [words[j], words[i]];
                 }
                 document.getElementById('shuffleInfo').textContent = '🔀 已打乱顺序';
             } else {
-                location.reload(); // 重新加载恢复原顺序
+                location.reload();
             }
             currentIndex = 0;
             updateCard();
@@ -419,24 +426,37 @@
 
         function speak() {
             const word = words[currentIndex].word;
+            
+            // 方法 1：先尝试浏览器自带 TTS
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(word);
                 utterance.lang = 'en-US';
                 utterance.rate = 0.8;
                 speechSynthesis.speak(utterance);
-            } else {
-                alert('抱歉，你的浏览器不支持语音合成。\n\n但卡片仍然可以正常使用！');
+                return;
+            }
+            
+            // 方法 2：用有道 TTS（需要联网）
+            try {
+                const audio = new Audio(`https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=1`);
+                audio.play();
+            } catch (e) {
+                // 方法 3：用 Google TTS（备用）
+                try {
+                    const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(word)}&tl=en&client=tw-ob`);
+                    audio.play();
+                } catch (e2) {
+                    alert('发音失败，请检查网络连接');
+                }
             }
         }
 
-        // 键盘支持
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowRight' || e.key === ' ') nextCard();
             if (e.key === 'ArrowLeft') prevCard();
             if (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown') flipCard();
         });
 
-        // 初始化
         updateCard();
     </script>
 </body>
